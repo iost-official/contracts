@@ -23,7 +23,8 @@ var (
 )
 
 func init() {
-	adminKey, err := account.NewKeyPair(common.Base58Decode("EhNiaU4DzUmjCrvynV3gaUeuj2VjB1v2DCmbGD5U2nSE"), crypto.Secp256k1)
+    var err error
+    adminKey, err = account.NewKeyPair(common.Base58Decode("EhNiaU4DzUmjCrvynV3gaUeuj2VjB1v2DCmbGD5U2nSE"), crypto.Secp256k1)
 	if err != nil {
 		panic(err)
 	}
@@ -31,8 +32,9 @@ func init() {
 }
 
 func main() {
-	ilog.SetLevel(ilog.LevelInfo)
-	s := verifier.NewSimulator()
+    ilog.SetLevel(ilog.LevelInfo)
+	ilog.Info("start!!")
+    s := verifier.NewSimulator()
 	defer s.Clear()
 	s.SetAccount(admin)
 	s.SetGas(admin.ID, 1000000)
