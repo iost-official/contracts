@@ -1,0 +1,25 @@
+{
+  "lang": "javascript",
+  "version": "1.0.0",
+  "abi": [
+    {
+      "name": "newGameWith",
+      "args": [
+        "string",
+        "number"
+      ]
+    },
+    {
+      "name":"move",
+      "args": [
+        "string",
+        "number",
+        "number"
+      ]
+    },
+    {
+      "name": "accomplish",
+      "args": ["number"]
+    }
+  ]
+}
