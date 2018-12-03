@@ -23,18 +23,26 @@ var (
 )
 
 func init() {
-    var err error
-    adminKey, err = account.NewKeyPair(common.Base58Decode("EhNiaU4DzUmjCrvynV3gaUeuj2VjB1v2DCmbGD5U2nSE"), crypto.Secp256k1)
+	var err error
+	adminKey, err = account.NewKeyPair(common.Base58Decode("EhNiaU4DzUmjCrvynV3gaUeuj2VjB1v2DCmbGD5U2nSE"), crypto.Secp256k1)
 	if err != nil {
 		panic(err)
 	}
 	admin = account.NewInitAccount("admin", adminKey.ID, adminKey.ID)
 }
 
+func makeArgs(s []interface{}) string {
+	args, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+	return string(args)
+}
+
 func main() {
-    ilog.SetLevel(ilog.LevelInfo)
+	ilog.SetLevel(ilog.LevelInfo)
 	ilog.Info("start!!")
-    s := verifier.NewSimulator()
+	s := verifier.NewSimulator()
 	defer s.Clear()
 	s.SetAccount(admin)
 	s.SetGas(admin.ID, 1000000)
@@ -65,11 +73,25 @@ func main() {
 	r, err := s.Call(cname, "deploy", string(args), admin.ID, adminKey)
 	ilog.Info(r)
 
-	web2 := s.Visitor.Get(cname + "@" + admin.ID + "-w0")
-	ilog.Info(web2)
+	ilog.Info("cname is ", cname)
+	ilog.Info("owner is ", admin.ID)
 
 	router := fasthttprouter.New()
+	router.OPTIONS("/getContractStorage/", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
+		ctx.Response.Header.Set("Access-Control-Allow-Origin", "*")
+		ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		ctx.Response.Header.Set("Access-Control-Max-Age", "3600")
+		ctx.Response.Header.Set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
+		ctx.Response.SetStatusCode(200)
+	})
 	router.POST("/getContractStorage/", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
+		body := ctx.PostBody()
+		var req map[string]string
+		err = json.Unmarshal(body, &req)
+		if err != nil {
+			ilog.Info(err)
+		}
+		web2 := s.Visitor.Get(req["contractID"] + "@" + req["owner"] + "-" + req["key"])
 		res := make(map[string]string)
 		res["jsonStr"] = web2[1:]
 
@@ -77,7 +99,7 @@ func main() {
 		ctx.Response.Header.Set("Access-Control-Allow-Origin", "*")
 
 		ctx.Response.SetStatusCode(200)
-		json.NewEncoder(ctx.Response.BodyWriter()).Encode(res)
+		json.NewEncoder(ctx).Encode(res)
 	})
 	if err := fasthttp.ListenAndServe("0.0.0.0:20001", router.Handler); err != nil {
 		fmt.Println("start fasthttp fail:", err.Error())

@@ -5,16 +5,16 @@
     {
       "name": "newGameWith",
       "args": [
-        "string",
-        "number"
+        "string"
       ]
     },
     {
       "name":"move",
       "args": [
-        "string",
         "number",
-        "number"
+        "number",
+        "number",
+        "string"
       ]
     },
     {
