@@ -24,13 +24,17 @@ class Game {
         this.hash = ""
     }
 
+    isTurn(player) {
+        return (this.count % 2 === 0 && player === this.a) ||
+            (this.count % 2 === 1 && player === this.b)
+    }
+
     move(player, x, y) {
         if (this.winner !== null) {
             return "this game has come to a close"
         }
 
-        if ((this.count % 2 === 0 && player !== this.a) ||
-            (this.count % 2 === 1 && player !== this.b)) {
+        if (!this.isTurn(player)) {
             return "error player"
         }
 
@@ -116,6 +120,8 @@ class Gobang {
 
         if (!Game._checkBound(x) || !Game._checkBound(y))
             throw "input out of bounds";
+
+        console.log(tx.publisher);
 
         const rtn = g.move(tx.publisher, x, y);
         if (rtn !== 0) {
