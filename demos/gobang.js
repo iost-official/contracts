@@ -10,7 +10,10 @@ class Board {
         this.record[x + "," + y] = step
     }
     color(x, y) { // 0 black; 1 white
-        return this.record[x + "," + y] % 0
+        if (this.isAvailable(x,y)) {
+            return 2
+        }
+        return this.record[x + "," + y] % 2
     }
 }
 
@@ -35,7 +38,7 @@ class Game {
         }
 
         if (!this.isTurn(player)) {
-            return "error player"
+            return "error player " + player + ", should be: " + (this.isTurn(this.a)? this.a:this.b)
         }
 
         if (!this.board.isAvailable(x, y)) {
@@ -109,7 +112,7 @@ class Gobang {
         newGame.hash = tx.hash;
         this._saveGame(id, newGame);
         storage.put("nonce", JSON.stringify(id + 1));
-        return "no"+id
+        return id
     }
 
     move(id, x, y, hash) {
