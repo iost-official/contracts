@@ -15,7 +15,6 @@ import (
 	"github.com/iost-official/go-iost/rpc/pb"
 	"github.com/iost-official/go-iost/verifier"
 	"github.com/iost-official/go-iost/vm/database"
-	"github.com/iost-official/playground/handlers"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttprouter"
 )
@@ -150,8 +149,7 @@ func main() {
 	}()
 
 	router := fasthttprouter.New()
-	router.OPTIONS("/getContractStorage/", handlers.OptionsHandler)
-	router.POST("/getContractStorage/", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
+	router.POST("/getContractStorage", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
 		body := ctx.PostBody()
 		var req map[string]interface{}
 		err := json.Unmarshal(body, &req)
@@ -178,8 +176,7 @@ func main() {
 		json.NewEncoder(ctx).Encode(res)
 	})
 
-	router.OPTIONS("/sendTx/", handlers.OptionsHandler)
-	router.POST("/sendTx/", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
+	router.POST("/sendTx", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
 		body := ctx.PostBody()
 		var req map[string]interface{}
 		err := json.Unmarshal(body, &req)
@@ -223,8 +220,6 @@ func main() {
 		ctx.Response.SetStatusCode(200)
 		json.NewEncoder(ctx).Encode(res)
 	})
-
-	router.OPTIONS("/getTxReceiptByTxHash/:hash", handlers.OptionsHandler)
 
 	router.GET("/getTxReceiptByTxHash/:hash", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
 
