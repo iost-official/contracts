@@ -1,10 +1,19 @@
 class Board {
     constructor(b){
+        if (b === undefined) {
+            this.record = {};
+            for (let i = 0; i < 15; i ++) {
+                for (let j = 0; j < 15; j ++) {
+                    this.record[i + "," + j] = -1
+                }
+            }
+            return
+        }
         this.record = b;
     }
 
     isAvailable(x, y) {
-        return this.record[x + "," + y] === undefined
+        return this.record[x + "," + y] === -1
     }
     move(x, y, step) {
         this.record[x + "," + y] = step
@@ -22,7 +31,7 @@ class Game {
         this.a = a;
         this.b = b;
         this.count = 0;
-        this.board = new Board({});
+        this.board = new Board();
         this.winner = null;
         this.hash = ""
     }
@@ -108,7 +117,7 @@ class Gobang {
     newGameWith(b) {
         const jn = storage.get("nonce");
         const id = JSON.parse(jn);
-        const newGame = new Game(tx.publisher, b, 15);
+        const newGame = new Game(tx.publisher, b);
         newGame.hash = tx.hash;
         this._saveGame(id, newGame);
         storage.put("nonce", JSON.stringify(id + 1));
