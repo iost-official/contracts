@@ -33,7 +33,8 @@ class Game {
         this.count = 0;
         this.board = new Board();
         this.winner = null;
-        this.hash = ""
+        this.hash = "";
+        this.placeHolder = ""
     }
 
     isTurn(player) {
@@ -97,11 +98,7 @@ class Game {
 
     static fromJSON(json) {
         const obj = JSON.parse(json);
-        let g = new Game(obj.a, obj.b);
-        g.count = obj.count;
-        g.winner = obj.winner;
-        g.hash = obj.hash;
-        g.board = new Board(obj.board.record);
+        let g = Object.assign(new Game, obj);
         return g
     }
 }
@@ -125,7 +122,7 @@ class Gobang {
     }
 
     move(id, x, y, hash) {
-        let g = this._readGame(id);
+        const g = this._readGame(id);
         if (g.hash !== hash) {
             throw "illegal hash in this fork"
         }
@@ -140,6 +137,12 @@ class Gobang {
             throw rtn
         }
         g.hash = tx.hash;
+        if (tx.publisher === g.a) {
+            g.placeHolder = "0000000000000000000000000000000000000000"
+        } else {
+            g.placeHolder = "";
+        }
+
         this._saveGame(id, g)
     }
 

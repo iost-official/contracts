@@ -1,0 +1,28 @@
+{
+  "lang": "javascript",
+  "version": "1.0.0",
+  "abi": [
+    {
+      "name": "bet",
+      "args": [
+        "number",
+        "number",
+        "string",
+        "string",
+        "string"
+      ]
+    },
+    {
+      "name":"reveal",
+      "args": [
+        "number",
+        "string",
+        "bool"
+      ]
+    },
+    {
+      "name": "del",
+      "args": ["number"]
+    }
+  ]
+}

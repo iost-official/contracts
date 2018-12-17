@@ -15,6 +15,7 @@ import (
 	"github.com/iost-official/go-iost/rpc/pb"
 	"github.com/iost-official/go-iost/verifier"
 	"github.com/iost-official/go-iost/vm/database"
+	"github.com/iost-official/go-iost/vm/native"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttprouter"
 )
@@ -132,21 +133,53 @@ func testGobang() (*verifier.Simulator, string) {
 	return s, cname
 }
 
+func createToken(s *verifier.Simulator) error {
+	// create token
+	r, err := s.Call("token.iost", "create", fmt.Sprintf(`["%v", "%v", %v, {}]`, "iost", admin.ID, 1000000), admin.ID, adminKey)
+	if err != nil || r.Status.Code != tx.Success {
+		return fmt.Errorf("err %v, receipt: %v", err, r)
+	}
+	// issue token
+	r, err = s.Call("token.iost", "issue", fmt.Sprintf(`["%v", "%v", "%v"]`, "iost", admin.ID, "1000"), admin.ID, adminKey)
+	if err != nil || r.Status.Code != tx.Success {
+		return fmt.Errorf("err %v, receipt: %v", err, r)
+	}
+	if 1e11 != s.Visitor.TokenBalance("iost", admin.ID) {
+		return fmt.Errorf("err %v, receipt: %v", err, r)
+	}
+	s.Visitor.Commit()
+	return nil
+}
+
+func testDice() (*verifier.Simulator, string) {
+	ilog.SetLevel(ilog.LevelInfo)
+	s := verifier.NewSimulator()
+	s.SetAccount(admin)
+	s.SetAccount(playerb)
+	s.SetGas(admin.ID, 100000000)
+	s.SetRAM(admin.ID, 30000)
+	s.SetGas(playerb.ID, 100000000)
+	s.SetRAM(playerb.ID, 30000)
+
+	s.SetContract(native.TokenABI())
+	s.Visitor.Commit()
+	createToken(s)
+
+	c, err := s.Compile("gobang.demo", "./demos/dice", "./demos/dice")
+	if err != nil {
+		panic(err)
+	}
+
+	cname, _, err := s.DeployContract(c, admin.ID, adminKey)
+	if err != nil {
+		panic(err)
+	}
+	return s, cname
+}
+
 func main() {
 
 	s, cname := testGobang()
-
-	go func() {
-		r, err := s.Call(cname, "newGameWith", makeArgs([]interface{}{"playerb"}), admin.ID, adminKey)
-		ilog.Info(r, err)
-		txhash := common.Base58Encode(r.TxHash)
-		ilog.Info(txhash)
-		r, err = s.Call(cname, "move", makeArgs([]interface{}{0, 7, 7, txhash}), admin.ID, adminKey)
-		ilog.Info(r)
-		txhash = common.Base58Encode(r.TxHash)
-		r, err = s.Call(cname, "move", makeArgs([]interface{}{0, 7, 8, txhash}), playerb.ID, adminKey)
-		ilog.Info(r, err)
-	}()
 
 	router := fasthttprouter.New()
 	router.POST("/getContractStorage", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
