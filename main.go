@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/golang/protobuf/jsonpb"
+	"net"
+
 	"github.com/iost-official/go-iost/account"
 	"github.com/iost-official/go-iost/common"
 	"github.com/iost-official/go-iost/core/tx"
-	"github.com/iost-official/go-iost/core/tx/pb"
 	"github.com/iost-official/go-iost/crypto"
 	"github.com/iost-official/go-iost/ilog"
-	"github.com/iost-official/go-iost/rpc/pb"
 	"github.com/iost-official/go-iost/verifier"
-	"github.com/iost-official/go-iost/vm/database"
 	"github.com/iost-official/go-iost/vm/native"
-	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttprouter"
+	"github.com/iost-official/playground/rpc"
+	"github.com/iost-official/playground/rpc/pb"
+	"golang.org/x/net/netutil"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -179,94 +179,20 @@ func testDice() (*verifier.Simulator, string) {
 
 func main() {
 
-	s, cname := testGobang()
+	s, cname := testDice()
+	fmt.Println("contract id is:", cname)
 
-	router := fasthttprouter.New()
-	router.POST("/getContractStorage", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
-		body := ctx.PostBody()
-		var req map[string]interface{}
-		err := json.Unmarshal(body, &req)
-		if err != nil {
-			ilog.Error(err)
-		}
+	grpcServer := grpc.NewServer()
+	apiService := rpc.NewServer(s)
+	rpcpb.RegisterApiServiceServer(grpcServer, apiService)
 
-		cid := cname
-
-		res := make(map[string]string)
-
-		ret := s.Visitor.Get(cid + "-" + req["key"].(string))
-		r2, ok := database.MustUnmarshal(ret).(string)
-		if ok {
-			res["jsonStr"] = r2
-		} else {
-			res["jsonStr"] = ""
-		}
-
-		ctx.Response.Header.SetCanonical(strContentType, strApplicationJSON)
-		ctx.Response.Header.Set("Access-Control-Allow-Origin", "*")
-
-		ctx.Response.SetStatusCode(200)
-		json.NewEncoder(ctx).Encode(res)
-	})
-
-	router.POST("/sendTx", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
-		body := ctx.PostBody()
-		var req map[string]interface{}
-		err := json.Unmarshal(body, &req)
-		if err != nil {
-			ilog.Error(err)
-		}
-
-		ilog.Info(req)
-
-		var tpb txpb.Tx
-
-		err = json.Unmarshal(body, &tpb)
-		if err != nil {
-			ilog.Error(err)
-		}
-
-		ilog.Info(tpb)
-
-		cid := cname
-		//cid := tpb.
-
-		res := make(map[string]string)
-
-		r, err := s.Call(cid, tpb.Actions[0].ActionName, tpb.Actions[0].Data, tpb.Publisher, adminKey)
-		ilog.Info(r, err)
-
-		if err != nil {
-			res["hash"] = ""
-		} else {
-			res["hash"] = common.Base58Encode(r.TxHash)
-			receiptDB[res["hash"]] = toPbTxReceipt(r)
-		}
-
-		ret := s.Visitor.Get(cid + "-games0")
-		r2 := database.MustUnmarshal(ret)
-		ilog.Error(r2)
-
-		ctx.Response.Header.SetCanonical(strContentType, strApplicationJSON)
-		ctx.Response.Header.Set("Access-Control-Allow-Origin", "*")
-
-		ctx.Response.SetStatusCode(200)
-		json.NewEncoder(ctx).Encode(res)
-	})
-
-	router.GET("/getTxReceiptByTxHash/:hash", func(ctx *fasthttp.RequestCtx, params fasthttprouter.Params) {
-
-		hash := params.ByName("hash")
-
-		ctx.Response.Header.SetCanonical(strContentType, strApplicationJSON)
-		ctx.Response.Header.Set("Access-Control-Allow-Origin", "*")
-
-		ctx.Response.SetStatusCode(200)
-		var ma = jsonpb.Marshaler{OrigName: true, EmitDefaults: true}
-		ma.Marshal(ctx, receiptDB[hash])
-	})
-
-	if err := fasthttp.ListenAndServe("0.0.0.0:20001", router.Handler); err != nil {
-		fmt.Println("start fasthttp fail:", err.Error())
+	lis, err := net.Listen("tcp", "0.0.0.0:30002")
+	if err != nil {
+		panic(err)
 	}
+	lis = netutil.LimitListener(lis, 10000)
+	if err := grpcServer.Serve(lis); err != nil {
+		ilog.Fatalf("start grpc failed. err=%v", err)
+	}
+
 }

@@ -2,23 +2,23 @@ class Bet {
     constructor(player, amount, number, player_seed, hash, inviter) {
         this.amount = amount;
         this.number = number;
-        this.hostHash = hash;
+        this.host_hash = hash;
         this.player = player;
-        this.playerSeed = player_seed;
-        this.hostSeed = "0000000000000000";
+        this.player_seed = player_seed;
+        this.host_seed = "0000000000000000";
         this.inviter = inviter;
         this.status = "pending"
     }
 
     reveal(seed) {
-        if (IOSTCrypto.sha3(seed) !== this.hostHash) {
+        if (IOSTCrypto.sha3(seed) !== this.host_hash) {
             throw "illegal seed"
         }
-        this.hostSeed = seed;
+        this.host_seed = seed;
     }
 
     dice() {
-        const hash = IOSTCrypto.sha3(this.playerSeed + this.hostSeed);
+        const hash = IOSTCrypto.sha3(this.player_seed + this.host_seed);
         let sum = 0;
         for (let i = 0; i < hash.length; i ++) {
             sum += hash.charCodeAt(i)
