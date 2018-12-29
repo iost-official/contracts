@@ -20,3 +20,5 @@ $ newAccount.sh playerB     # another account
 
 echo ~/.iwallet/playera_ed25519  # read the secure key of playerA
 ```
+
+We strongly recommend you using your own account to run tests.
