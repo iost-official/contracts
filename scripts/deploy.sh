@@ -8,4 +8,4 @@ iwallet \
  --server 47.244.109.92:30002 \
  --account admin \
  --amount_limit '*:unlimited' \
- publish demos/$1.js demos/$1.abi
+ publish ../demos/$1.js ../demos/$1.abi
