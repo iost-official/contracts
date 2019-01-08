@@ -142,7 +142,7 @@ class Gobang {
 
     accomplish(id) {
         let game = this._readGame(id);
-        if (!BlockChain.requireAuth(game.a, "active") && !BlockChain.requireAuth(game.b, "active")) {
+        if (!blockchain.requireAuth(game.a, "active") && !blockchain.requireAuth(game.b, "active")) {
             throw "require auth error"
         }
         this._releaseGame(id)
