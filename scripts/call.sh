@@ -6,6 +6,4 @@ iwallet \
  --server localhost:30002 \
  --account admin \
  --amount_limit '*:unlimited' \
- call "ContractEm6NRHWGJ9f2XWBayKMQfffXpGL7vpfF49HhqLs8tD63" 'read' '[]'
- #call "token.iost" "transfer" '["iost","someone","me","10000.00","trasfer from someone not exist"]'
-
+ call "gas.iost" 'pledge' '["admin","player1","10000.00"]'
