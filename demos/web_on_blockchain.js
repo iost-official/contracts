@@ -1,5 +1,5 @@
 class Web {
-    constructor(){}
+
     init() {
         storage.put("nonce", JSON.stringify(0));
     }
